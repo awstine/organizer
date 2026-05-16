@@ -31,14 +31,14 @@
                 <data android:scheme="organizing" android:host="book" />
             </intent-filter>
 
-            <!-- App Link: https://organizing.app/book/linkId -->
+            <!-- App Link: https://ecotrack-846b1.web.app/book/linkId -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:scheme="https"
-                    android:host="organizing.app"
+                    android:host="ecotrack-846b1.web.app"
                     android:pathPrefix="/book" />
             </intent-filter>
         </activity>

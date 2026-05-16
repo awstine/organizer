@@ -209,7 +209,7 @@ fun LinkCard(link: BookingLink) {
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "organizing.app/book/${link.linkId}",
+                        text = "ecotrack-846b1.web.app/book/${link.linkId}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFF334D4D),
                         modifier = Modifier.weight(1f),

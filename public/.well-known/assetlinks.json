@@ -1,0 +1,9 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.organizethem.organizethem",
+    "sha256_cert_fingerprints":
+    ["15:28:03:AC:90:EE:7B:F3:3B:8B:CA:10:89:E0:C9:7F:9F:BF:44:A4:FB:A5:11:B9:7F:1B:30:74:03:D8:37:C4"]
+  }
+}]

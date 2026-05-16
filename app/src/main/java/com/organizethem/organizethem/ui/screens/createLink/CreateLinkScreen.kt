@@ -139,7 +139,7 @@ fun CreateLinkScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "organizing.app/book/$linkId",
+                            text = "ecotrack-846b1.web.app/book/$linkId",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF334D4D),
                             textAlign = TextAlign.Center,
@@ -223,8 +223,7 @@ fun ShareLinkButton(linkId: String) {
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 val text = "Book time with me!\n\n" +
-                        "App Link: organizing://book/$linkId\n" +
-                        "Web Link: https://organizing.app/book/$linkId"
+                        "Link: https://ecotrack-846b1.web.app/book/$linkId"
                 putExtra(Intent.EXTRA_TEXT, text)
                 putExtra(Intent.EXTRA_SUBJECT, "Book time with me")
             }

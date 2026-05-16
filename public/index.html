@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organize Them - Book a Time</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: '#334D4D', // Your Dark Slate
+                        surface: '#F5F5F5', // Your Soft Gray Cards
+                        mint: '#E8F5E9',
+                        mintText: '#2E7D32'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white text-slate-900 font-sans antialiased p-6">
+    
+    <div id="app-container" class="max-w-lg mx-auto mt-12">
+        <div id="loading" class="text-center text-slate-500 mt-20">
+            <svg class="animate-spin h-8 w-8 text-brand mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            Loading availability...
+        </div>
+
+        <div id="error" class="hidden text-center mt-20">
+            <h2 class="text-2xl font-bold text-slate-800">404 - Link Not Found</h2>
+            <p class="text-slate-500 mt-2">This booking link is invalid or has been deactivated.</p>
+        </div>
+
+        <div id="booking-ui" class="hidden">
+            <h1 id="host-title" class="text-3xl font-bold mb-2">Booking Title</h1>
+            <p id="host-desc" class="text-slate-500 mb-8">Booking description goes here.</p>
+
+            <div class="bg-surface rounded-2xl p-6 md:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold">Select Date & Time</h3>
+                    <span id="duration-badge" class="bg-mint text-mintText text-xs font-bold px-3 py-1.5 rounded-full tracking-wide">
+                        -- min
+                    </span>
+                </div>
+
+                <div class="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center text-slate-500 mb-6 bg-white">
+                    <p class="font-medium">Calendar & Time Slots</p>
+                    <p class="text-sm mt-1">Select time in the app for the full experience</p>
+                </div>
+
+                <div class="space-y-4 mb-8">
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-slate-800">Guest Name</label>
+                        <input type="text" id="guest-name" class="w-full bg-white rounded-xl p-3.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand transition-all" placeholder="John Doe">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-slate-800">Guest Email</label>
+                        <input type="email" id="guest-email" class="w-full bg-white rounded-xl p-3.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand transition-all" placeholder="john@example.com">
+                    </div>
+                </div>
+
+                <button id="confirm-btn" class="w-full bg-brand text-white font-bold py-4 rounded-full hover:bg-opacity-90 transition-all shadow-md">
+                    Confirm Booking
+                </button>
+            </div>
+        </div>
+    </div>
+
+    
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // 1. UPDATED FIREBASE CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyC55p_OMppgnCZV-1xEFQCDqy5AjnP-QOo",
+            authDomain: "ecotrack-846b1.firebaseapp.com",
+            projectId: "ecotrack-846b1",
+            storageBucket: "ecotrack-846b1.firebasestorage.app",
+            messagingSenderId: "110585987108",
+            appId: "1:110585987108:android:60f4832b2919759b4198b1"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 2. EXTRACT THE LINK ID FROM THE URL
+        const pathParts = window.location.pathname.split('/');
+        const linkId = pathParts[pathParts.length - 1];
+
+        // UI Elements
+        const loadingEl = document.getElementById('loading');
+        const errorEl = document.getElementById('error');
+        const uiEl = document.getElementById('booking-ui');
+
+        // 3. FETCH THE DATA
+        async function loadLinkData() {
+            if (!linkId || linkId === 'book' || linkId === '') {
+                showError();
+                return;
+            }
+
+            try {
+                // FIXED COLLECTION NAME: "booking_links"
+                const docRef = doc(db, "booking_links", linkId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    document.getElementById('host-title').innerText = data.title || "Booking Link";
+                    document.getElementById('host-desc').innerText = data.description || "";
+                    document.getElementById('duration-badge').innerText = `${data.duration} min`;
+
+                    loadingEl.classList.add('hidden');
+                    uiEl.classList.remove('hidden');
+                } else {
+                    showError();
+                }
+            } catch (error) {
+                console.error("Error reading from Firestore:", error);
+                showError();
+            }
+        }
+
+        function showError() {
+            loadingEl.classList.add('hidden');
+            errorEl.classList.remove('hidden');
+        }
+
+        loadLinkData();
+
+        document.getElementById('confirm-btn').addEventListener('click', () => {
+            const name = document.getElementById('guest-name').value;
+            const email = document.getElementById('guest-email').value;
+            
+            if(!name || !email) {
+                alert("Please fill in your name and email.");
+                return;
+            }
+
+            alert(`Booking initiated for ${name}! (Next step: Write to AppointmentsCollection in Firestore)`);
+        });
+    </script>
+</body>
+</html>

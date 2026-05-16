@@ -15,4 +15,19 @@ object DateUtils {
         val date = LocalDate.parse(dateString, formatter)
         return date.isBefore(LocalDate.now())
     }
+
+    fun formatDisplayDate(dateString: String): String {
+        val date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        return date.format(DateTimeFormatter.ofPattern("EEE, d MMM"))
+    }
+
+    fun formatDay(dateString: String): String {
+        val date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        return date.format(DateTimeFormatter.ofPattern("d"))
+    }
+
+    fun formatMonth(dateString: String): String {
+        val date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        return date.format(DateTimeFormatter.ofPattern("MMM"))
+    }
 }
