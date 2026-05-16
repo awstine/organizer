@@ -11,6 +11,12 @@
 - **Modern UI**: Built entirely with Jetpack Compose using Material 3 design principles.
 - **Robust Architecture**: Follows Clean Architecture patterns with Hilt for Dependency Injection and a stateless UI approach for high testability.
 
+## 📱 Screenshots
+
+| Dashboard | New Link | Availability |
+| :---: | :---: | :---: |
+| ![Dashboard](screenshots/dashboard.png) | ![New Link](screenshots/create_link.png) | ![Availability](screenshots/availability.png) |
+
 ## 🛠 Tech Stack
 
 - **Language**: [Kotlin](https://kotlinlang.org/)
