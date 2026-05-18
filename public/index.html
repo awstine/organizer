@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Organize Them - Book a Time</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        brand: '#334D4D', // Your Dark Slate
-                        surface: '#F5F5F5', // Your Soft Gray Cards
+                        brand: '#334D4D',
+                        surface: '#F5F5F5',
                         mint: '#E8F5E9',
                         mintText: '#2E7D32'
                     }
@@ -21,12 +20,12 @@
         }
     </script>
 </head>
-<body class="bg-white text-slate-900 font-sans antialiased p-6">
-    
-    <div id="app-container" class="max-w-lg mx-auto mt-12">
+<body class="bg-white text-slate-900 font-sans antialiased p-4 md:p-10">
+
+    <div id="app-container" class="max-w-2xl mx-auto">
         <div id="loading" class="text-center text-slate-500 mt-20">
-            <svg class="animate-spin h-8 w-8 text-brand mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            Loading availability...
+            <svg class="animate-spin h-10 w-10 text-brand mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            Loading schedule...
         </div>
 
         <div id="error" class="hidden text-center mt-20">
@@ -35,47 +34,73 @@
         </div>
 
         <div id="booking-ui" class="hidden">
-            <h1 id="host-title" class="text-3xl font-bold mb-2">Booking Title</h1>
-            <p id="host-desc" class="text-slate-500 mb-8">Booking description goes here.</p>
-
-            <div class="bg-surface rounded-2xl p-6 md:p-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-lg font-bold">Select Date & Time</h3>
-                    <span id="duration-badge" class="bg-mint text-mintText text-xs font-bold px-3 py-1.5 rounded-full tracking-wide">
-                        -- min
+            <div class="mb-8">
+                <h1 id="host-title" class="text-3xl font-bold mb-2">Booking Title</h1>
+                <p id="host-desc" class="text-slate-500">Booking description.</p>
+                <div class="mt-4 flex items-center">
+                     <span id="duration-badge" class="bg-mint text-mintText text-sm font-bold px-3 py-1 rounded-full tracking-wide">
+                        -- min session
                     </span>
                 </div>
+            </div>
 
-                <div class="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center text-slate-500 mb-6 bg-white">
-                    <p class="font-medium">Calendar & Time Slots</p>
-                    <p class="text-sm mt-1">Select time in the app for the full experience</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Date and Time selection -->
+                <div class="bg-surface rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-4">Select Date</h3>
+                    <div id="date-list" class="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+                        <!-- Date chips will be injected here -->
+                    </div>
+
+                    <div id="time-section" class="mt-6 hidden">
+                        <h3 class="text-lg font-bold mb-4">Available Times</h3>
+                        <div id="time-grid" class="grid grid-cols-2 gap-3">
+                            <!-- Time slots will be injected here -->
+                        </div>
+                    </div>
                 </div>
 
-                <div class="space-y-4 mb-8">
-                    <div>
-                        <label class="block text-sm font-bold mb-2 text-slate-800">Guest Name</label>
-                        <input type="text" id="guest-name" class="w-full bg-white rounded-xl p-3.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand transition-all" placeholder="John Doe">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold mb-2 text-slate-800">Guest Email</label>
-                        <input type="email" id="guest-email" class="w-full bg-white rounded-xl p-3.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand transition-all" placeholder="john@example.com">
+                <!-- Booker Info -->
+                <div id="info-section" class="hidden">
+                    <div class="bg-surface rounded-2xl p-6 h-full flex flex-col">
+                        <h3 class="text-lg font-bold mb-4">Your Information</h3>
+                        <div class="space-y-4 mb-6">
+                            <div>
+                                <label class="block text-sm font-bold mb-2 text-slate-800">Full Name</label>
+                                <input type="text" id="guest-name" class="w-full bg-white rounded-xl p-3 border border-slate-200 focus:ring-2 focus:ring-brand outline-none" placeholder="John Doe">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold mb-2 text-slate-800">Email Address</label>
+                                <input type="email" id="guest-email" class="w-full bg-white rounded-xl p-3 border border-slate-200 focus:ring-2 focus:ring-brand outline-none" placeholder="john@example.com">
+                            </div>
+                        </div>
+                        <div class="mt-auto">
+                            <button id="confirm-btn" class="w-full bg-brand text-white font-bold py-4 rounded-full hover:bg-opacity-90 transition-all shadow-md disabled:opacity-50">
+                                Confirm Booking
+                            </button>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <button id="confirm-btn" class="w-full bg-brand text-white font-bold py-4 rounded-full hover:bg-opacity-90 transition-all shadow-md">
-                    Confirm Booking
-                </button>
+        <!-- Success Dialog -->
+        <div id="success-dialog" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center">
+                <div class="bg-mint w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-mintText">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">Booking Confirmed!</h2>
+                <p class="text-slate-500 mb-6">Your appointment has been scheduled successfully.</p>
+                <button onclick="window.location.reload()" class="w-full bg-brand text-white font-bold py-3 rounded-full">Done</button>
             </div>
         </div>
     </div>
 
-    
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, getDocs, collection, query, where, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // 1. UPDATED FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyC55p_OMppgnCZV-1xEFQCDqy5AjnP-QOo",
             authDomain: "ecotrack-846b1.firebaseapp.com",
@@ -88,63 +113,219 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // 2. EXTRACT THE LINK ID FROM THE URL
         const pathParts = window.location.pathname.split('/');
         const linkId = pathParts[pathParts.length - 1];
 
-        // UI Elements
+        let linkData = null;
+        let ownerAvailability = null;
+        let selectedDate = null;
+        let selectedTime = null;
+
         const loadingEl = document.getElementById('loading');
         const errorEl = document.getElementById('error');
         const uiEl = document.getElementById('booking-ui');
+        const dateListEl = document.getElementById('date-list');
+        const timeSectionEl = document.getElementById('time-section');
+        const timeGridEl = document.getElementById('time-grid');
+        const infoSectionEl = document.getElementById('info-section');
+        const confirmBtn = document.getElementById('confirm-btn');
 
-        // 3. FETCH THE DATA
-        async function loadLinkData() {
+        async function init() {
             if (!linkId || linkId === 'book' || linkId === '') {
                 showError();
                 return;
             }
 
             try {
-                // FIXED COLLECTION NAME: "booking_links"
-                const docRef = doc(db, "booking_links", linkId);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    
-                    document.getElementById('host-title').innerText = data.title || "Booking Link";
-                    document.getElementById('host-desc').innerText = data.description || "";
-                    document.getElementById('duration-badge').innerText = `${data.duration} min`;
-
-                    loadingEl.classList.add('hidden');
-                    uiEl.classList.remove('hidden');
-                } else {
+                const docSnap = await getDoc(doc(db, "booking_links", linkId));
+                if (!docSnap.exists()) {
                     showError();
+                    return;
                 }
+
+                linkData = docSnap.data();
+                document.getElementById('host-title').innerText = linkData.title;
+                document.getElementById('host-desc').innerText = linkData.description || "";
+                document.getElementById('duration-badge').innerText = `${linkData.duration} min session`;
+
+                // Fetch availability
+                const availSnap = await getDocs(collection(db, "availability", linkData.ownerId, "days"));
+                ownerAvailability = {};
+                availSnap.forEach(doc => {
+                    ownerAvailability[doc.id] = doc.data();
+                });
+
+                generateDates();
+
+                loadingEl.classList.add('hidden');
+                uiEl.classList.remove('hidden');
             } catch (error) {
-                console.error("Error reading from Firestore:", error);
+                console.error(error);
                 showError();
             }
         }
+
+        function generateDates() {
+            const days = [];
+            const today = new Date();
+
+            for (let i = 0; i < 30; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+
+                const yyyy = date.getFullYear();
+                const mm = String(date.getMonth() + 1).padStart(2, '0');
+                const dd = String(date.getDate()).padStart(2, '0');
+                const dateStr = `${yyyy}-${mm}-${dd}`;
+
+                const dayOfWeek = date.toLocaleString('en-US', { weekday: 'long' }).toLowerCase();
+                const schedule = ownerAvailability[dayOfWeek];
+
+                if (schedule && schedule.enabled) {
+                    days.push({
+                        str: dateStr,
+                        day: date.getDate(),
+                        month: date.toLocaleString('en-US', { month: 'short' }),
+                        weekday: date.toLocaleString('en-US', { weekday: 'short' }).toUpperCase()
+                    });
+                }
+            }
+
+            dateListEl.innerHTML = days.map(d => `
+                <div class="date-chip flex-shrink-0 w-16 bg-white border border-slate-200 rounded-2xl p-3 text-center cursor-pointer transition-all hover:border-brand"
+                     onclick="selectDate('${d.str}', this)">
+                    <div class="text-[10px] text-slate-400 uppercase font-bold">${d.month}</div>
+                    <div class="text-xl font-bold">${d.day}</div>
+                    <div class="text-[10px] text-slate-400 uppercase font-bold">${d.weekday}</div>
+                </div>
+            `).join('');
+        }
+
+        window.selectDate = async (date, element) => {
+            selectedDate = date;
+            selectedTime = null;
+            infoSectionEl.classList.add('hidden');
+
+            // UI update
+            document.querySelectorAll('.date-chip').forEach(el => {
+                el.classList.remove('bg-brand', 'text-white', 'border-brand');
+                el.classList.add('bg-white', 'text-slate-900', 'border-slate-200');
+            });
+            element.classList.remove('bg-white', 'text-slate-900', 'border-slate-200');
+            element.classList.add('bg-brand', 'text-white', 'border-brand');
+
+            timeSectionEl.classList.remove('hidden');
+            timeGridEl.innerHTML = '<div class="col-span-2 text-center py-4">Loading slots...</div>';
+
+            const dayOfWeek = new Date(date).toLocaleString('en-US', { weekday: 'long' }).toLowerCase();
+            const schedule = ownerAvailability[dayOfWeek];
+
+            // Get booked slots
+            const q = query(collection(db, "appointments"),
+                      where("ownerId", "==", linkData.ownerId),
+                      where("date", "==", date));
+            const bookedSnap = await getDocs(q);
+            const bookedTimes = bookedSnap.docs.map(doc => doc.data().startTime);
+
+            const slots = generateSlots(schedule, linkData.duration, bookedTimes);
+
+            if (slots.length === 0) {
+                timeGridEl.innerHTML = '<div class="col-span-2 text-center py-8 text-slate-400 bg-white rounded-xl">No slots available</div>';
+            } else {
+                timeGridEl.innerHTML = slots.map(s => `
+                    <div class="time-slot bg-white border border-slate-200 rounded-xl p-4 text-center font-bold cursor-pointer transition-all hover:border-brand"
+                         onclick="selectTime('${s}', this)">
+                        ${s}
+                    </div>
+                `).join('');
+            }
+        };
+
+        function generateSlots(schedule, duration, bookedSlots) {
+            const slots = [];
+            let currentHour = schedule.startHour;
+            let currentMinute = schedule.startMinute;
+            const endMinutes = schedule.endHour * 60 + schedule.endMinute;
+
+            while (currentHour * 60 + currentMinute + duration <= endMinutes) {
+                const timeString = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
+
+                if (!bookedSlots.includes(timeString)) {
+                    slots.push(timeString);
+                }
+
+                currentMinute += duration;
+                if (currentMinute >= 60) {
+                    currentHour += Math.floor(currentMinute / 60);
+                    currentMinute = currentMinute % 60;
+                }
+            }
+            return slots;
+        }
+
+        window.selectTime = (time, element) => {
+            selectedTime = time;
+            document.querySelectorAll('.time-slot').forEach(el => {
+                el.classList.remove('bg-brand', 'text-white', 'border-brand');
+                el.classList.add('bg-white', 'border-slate-200');
+            });
+            element.classList.remove('bg-white', 'border-slate-200');
+            element.classList.add('bg-brand', 'text-white', 'border-brand');
+
+            infoSectionEl.classList.remove('hidden');
+            // Scroll to info
+            setTimeout(() => infoSectionEl.scrollIntoView({ behavior: 'smooth' }), 100);
+        };
+
+        confirmBtn.addEventListener('click', async () => {
+            const name = document.getElementById('guest-name').value.trim();
+            const email = document.getElementById('guest-email').value.trim();
+
+            if(!name || !email) {
+                alert("Please fill in your name and email.");
+                return;
+            }
+
+            confirmBtn.disabled = true;
+            confirmBtn.innerText = "Processing...";
+
+            try {
+                // Calculate end time
+                const [h, m] = selectedTime.split(':').map(Number);
+                let totalMin = h * 60 + m + linkData.duration;
+                const endTime = `${String(Math.floor(totalMin/60)).padStart(2, '0')}:${String(totalMin%60).padStart(2, '0')}`;
+
+                const appointmentId = `${selectedDate}_${linkData.ownerId}_${selectedTime}`;
+                const appointmentData = {
+                    appointmentId,
+                    ownerId: linkData.ownerId,
+                    linkId: linkId,
+                    date: selectedDate,
+                    startTime: selectedTime,
+                    endTime: endTime,
+                    bookerName: name,
+                    bookerEmail: email,
+                    status: "scheduled",
+                    duration: linkData.duration,
+                    createdAt: serverTimestamp()
+                };
+
+                await setDoc(doc(db, "appointments", appointmentId), appointmentData);
+                document.getElementById('success-dialog').classList.remove('hidden');
+            } catch (err) {
+                console.error(err);
+                alert("Booking failed. Please try again.");
+                confirmBtn.disabled = false;
+                confirmBtn.innerText = "Confirm Booking";
+            }
+        });
 
         function showError() {
             loadingEl.classList.add('hidden');
             errorEl.classList.remove('hidden');
         }
 
-        loadLinkData();
-
-        document.getElementById('confirm-btn').addEventListener('click', () => {
-            const name = document.getElementById('guest-name').value;
-            const email = document.getElementById('guest-email').value;
-            
-            if(!name || !email) {
-                alert("Please fill in your name and email.");
-                return;
-            }
-
-            alert(`Booking initiated for ${name}! (Next step: Write to AppointmentsCollection in Firestore)`);
-        });
+        init();
     </script>
 </body>
 </html>
