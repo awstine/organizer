@@ -52,6 +52,9 @@ fun AppNavGraph(
 
         composable(Screen.Home.route) {
             HomeScreen(
+                onNavigateToDashboard = {
+                    // Already on Dashboard
+                },
                 onNavigateToCreateLink = {
                     navController.navigate(Screen.CreateLink.route)
                 },
@@ -69,6 +72,17 @@ fun AppNavGraph(
 
         composable(Screen.ManageLinks.route) {
             ManageLinksScreen(
+                onNavigateToDashboard = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onNavigateToAppointments = {
+                    navController.navigate(Screen.MyAppointments.route)
+                },
+                onNavigateToAvailability = {
+                    navController.navigate(Screen.SetAvailability.route)
+                },
                 onBack = {
                     navController.popBackStack()
                 }
@@ -77,6 +91,17 @@ fun AppNavGraph(
 
         composable(Screen.SetAvailability.route) {
             SetAvailabilityScreen(
+                onNavigateToDashboard = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onNavigateToAppointments = {
+                    navController.navigate(Screen.MyAppointments.route)
+                },
+                onNavigateToLinks = {
+                    navController.navigate(Screen.ManageLinks.route)
+                },
                 onSaved = {
                     navController.popBackStack()
                 }
@@ -94,6 +119,17 @@ fun AppNavGraph(
 
         composable(Screen.MyAppointments.route) {
             MyAppointmentsScreen(
+                onNavigateToDashboard = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onNavigateToAvailability = {
+                    navController.navigate(Screen.SetAvailability.route)
+                },
+                onNavigateToLinks = {
+                    navController.navigate(Screen.ManageLinks.route)
+                },
                 onBack = {
                     navController.popBackStack()
                 }

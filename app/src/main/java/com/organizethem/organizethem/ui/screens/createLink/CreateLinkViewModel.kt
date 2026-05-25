@@ -14,7 +14,6 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
-
 @HiltViewModel
 class CreateLinkViewModel @Inject constructor(
     private val bookingLinksCollection: BookingLinksCollection,
@@ -23,6 +22,8 @@ class CreateLinkViewModel @Inject constructor(
     var title by mutableStateOf("")
     var description by mutableStateOf("")
     var duration by mutableIntStateOf(30)
+    var meetingType by mutableStateOf("online") // "online", "in-person", "choice"
+    var location by mutableStateOf("")
     var createdLinkId by mutableStateOf<String?>(null)
 
     fun createLink() {
@@ -35,7 +36,9 @@ class CreateLinkViewModel @Inject constructor(
                 ownerId = userId,
                 title = title,
                 duration = duration,
-                description = description
+                description = description,
+                meetingType = meetingType,
+                location = location
             )
 
             bookingLinksCollection.createLink(link)

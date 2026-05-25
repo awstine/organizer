@@ -4,6 +4,8 @@ import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -23,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -42,6 +45,13 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.launch
 
+val PrimaryColor = Color(0xFF334D4D)
+val SecondaryColor = Color(0xFFF5F5F5)
+val NeutralColor = Color(0xFF1E1E1E)
+
+val ManropeFont = FontFamily.Default
+val InterFont = FontFamily.Default
+
 @Composable
 fun SignInScreen(
     viewModel: SignInViewModel = hiltViewModel(),
@@ -49,9 +59,9 @@ fun SignInScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    
+
     val webClientId = "110585987108-l89q93i338ss3qfa4n27c41m6ahlhjmd.apps.googleusercontent.com"
-    
+
     val credentialManager = remember { CredentialManager.create(context) }
     val authorizationClient = remember { Identity.getAuthorizationClient(context) }
 
@@ -84,7 +94,7 @@ fun SignInScreen(
         onEmailChange = { viewModel.email = it },
         onPasswordChange = { viewModel.password = it },
         onNameChange = { viewModel.name = it },
-        onToggleMode = { 
+        onToggleMode = {
             viewModel.isSignIn = !viewModel.isSignIn
             viewModel.error = null
         },
@@ -104,12 +114,12 @@ fun SignInScreen(
                         context = context
                     )
                     val credential = result.credential
-                    
-                    if (credential is CustomCredential && 
+
+                    if (credential is CustomCredential &&
                         credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                         val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
                         val idToken = googleIdTokenCredential.idToken
-                        
+
                         val calendarScope = Scope("https://www.googleapis.com/auth/calendar")
                         val authRequest = AuthorizationRequest.builder()
                             .setRequestedScopes(listOf(calendarScope))
@@ -162,123 +172,234 @@ fun SignInContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
+                .padding(horizontal = 24.dp, vertical = 32.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
+            // --- Top Header Area (Logo & Toggle) ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Organize",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontFamily = ManropeFont,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = PrimaryColor,
+                        fontSize = 22.sp
+                    )
+                )
+
+                if (isSignIn) {
+                    Row {
+                        Text("New user? ", style = MaterialTheme.typography.bodyMedium.copy(fontFamily = InterFont, color = Color.Gray))
+                        Text(
+                            text = "Sign up",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold, color = PrimaryColor),
+                            modifier = Modifier.clickable { onToggleMode() }
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "Sign In",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold, color = PrimaryColor),
+                        modifier = Modifier.clickable { onToggleMode() }
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(48.dp))
 
+            // --- Main Titles ---
             Text(
                 text = if (isSignIn) "Sign In" else "Create Account",
                 style = MaterialTheme.typography.headlineLarge.copy(
+                    fontFamily = ManropeFont,
                     fontWeight = FontWeight.Bold,
                     fontSize = 32.sp
                 ),
-                color = Color(0xFF1E1E1E)
+                color = NeutralColor
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = if (isSignIn) 
-                    "Hi! Welcome back, you've been missed" 
-                else 
-                    "Fill your information below or register with your social accounts",
+                text = if (isSignIn)
+                    "Access your premium productivity\nenvironment."
+                else
+                    "Start organizing your professional life with a\nsense of calm and order.",
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = InterFont),
                 color = Color.Gray,
-                modifier = Modifier.padding(horizontal = 24.dp)
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // --- Google Button ---
+            Button(
+                onClick = onGoogleSignInClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(28.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = NeutralColor
+                ),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 2.dp,
+                    pressedElevation = 0.dp
+                ),
+                enabled = !isLoading
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    // Placeholder for Google Logo - replace with actual Google Icon drawable if preferred
+                    Text(
+                        text = "G",
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFFDB4437),
+                        fontSize = 18.sp
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Sign in with Google",
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontFamily = InterFont,
+                            fontWeight = FontWeight.Bold,
+                            color = NeutralColor
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // --- Divider ---
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFEEEEEE))
+                Text(
+                    text = "OR EMAIL",
+                    style = MaterialTheme.typography.labelSmall.copy(fontFamily = InterFont),
+                    color = Color.Gray,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFEEEEEE))
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // --- Text Fields ---
             if (!isSignIn) {
                 AuthTextField(
                     value = name,
                     onValueChange = onNameChange,
-                    label = "Name",
-                    placeholder = "John Doe"
+                    label = "Full Name",
+                    placeholder = "Alex Morgan"
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
             }
 
             AuthTextField(
                 value = email,
                 onValueChange = onEmailChange,
-                label = "Email",
-                placeholder = "johndoe@gmail.com"
+                label = if (isSignIn) "Email Address" else "Work Email",
+                placeholder = if (isSignIn) "name@company.com" else "alex.morgan@pro.com"
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             var passwordVisible by remember { mutableStateOf(false) }
             AuthTextField(
                 value = password,
                 onValueChange = onPasswordChange,
                 label = "Password",
-                placeholder = "************",
+                placeholder = if (isSignIn) "••••••••" else "Min. 8 characters",
                 isPassword = true,
                 passwordVisible = passwordVisible,
-                onPasswordToggle = { passwordVisible = !passwordVisible }
+                onPasswordToggle = { passwordVisible = !passwordVisible },
+                trailingLabel = if (isSignIn) {
+                    {
+                        Text(
+                            text = "Forgot?",
+                            style = MaterialTheme.typography.labelMedium.copy(fontFamily = InterFont, color = PrimaryColor),
+                            modifier = Modifier.clickable { /* Handle forgot password */ }
+                        )
+                    }
+                } else null
             )
 
-            if (isSignIn) {
-                Text(
-                    text = "Forgot Password?",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF334D4D)
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // --- Checkbox Row ---
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                var agreed by remember { mutableStateOf(false) }
+                Checkbox(
+                    checked = agreed,
+                    onCheckedChange = { agreed = it },
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = PrimaryColor,
+                        uncheckedColor = Color.LightGray
                     ),
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(top = 8.dp)
-                        .clickable { /* Handle forgot password */ }
+                    modifier = Modifier.size(20.dp)
                 )
-            } else {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp)
-                ) {
-                    var agreed by remember { mutableStateOf(false) }
-                    Checkbox(
-                        checked = agreed,
-                        onCheckedChange = { agreed = it },
-                        colors = CheckboxDefaults.colors(checkedColor = Color(0xFF334D4D))
+                Spacer(modifier = Modifier.width(12.dp))
+
+                if (isSignIn) {
+                    Text(
+                        text = "Keep me signed in for 30 days",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontFamily = InterFont, color = NeutralColor)
                     )
+                } else {
                     val annotatedString = buildAnnotatedString {
-                        append("Agree with ")
-                        withStyle(style = SpanStyle(color = Color(0xFF334D4D), fontWeight = FontWeight.Bold)) {
-                            append("Terms & Condition")
+                        append("I agree to the ")
+                        withStyle(style = SpanStyle(color = PrimaryColor, fontWeight = FontWeight.Bold)) {
+                            append("Terms of Service")
+                        }
+                        append(" and ")
+                        withStyle(style = SpanStyle(color = PrimaryColor, fontWeight = FontWeight.Bold)) {
+                            append("Privacy Policy.")
                         }
                     }
-                    Text(text = annotatedString, style = MaterialTheme.typography.bodySmall)
+                    Text(text = annotatedString, style = MaterialTheme.typography.bodyMedium.copy(fontFamily = InterFont, color = NeutralColor))
                 }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // --- Main Action Button ---
             Button(
                 onClick = onMainActionClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF334D4D)),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
                 enabled = !isLoading
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        color = Color.White, 
+                        color = Color.White,
                         modifier = Modifier
                             .size(24.dp)
                             .testTag("loading_indicator")
                     )
                 } else {
                     Text(
-                        text = if (isSignIn) "Sign In" else "Sign Up",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        text = if (isSignIn) "Sign In" else "Create Account",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontFamily = InterFont,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
                     )
                 }
             }
@@ -288,80 +409,31 @@ fun SignInContent(
                 Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            // --- Footer (Sign In mode only) ---
+            if (isSignIn) {
+                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(32.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFEEEEEE))
-                Text(
-                    text = " Or ",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray,
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFEEEEEE))
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = onGoogleSignInClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFF5F5F5),
-                    contentColor = Color.Black
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
-                enabled = !isLoading
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Surface(
-                        modifier = Modifier.size(24.dp),
-                        shape = CircleShape,
-                        color = Color.White,
-                        border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.LightGray)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                text = "G",
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color(0xFFDB4437),
-                                fontSize = 14.sp
-                            )
-                        }
+                val footerText = buildAnnotatedString {
+                    append("By continuing, you agree to Organize's ")
+                    withStyle(style = SpanStyle(color = PrimaryColor, fontWeight = FontWeight.SemiBold)) {
+                        append("Terms of\nService")
                     }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = if (isSignIn) "Sign in with Google" else "Sign up with Google",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF1E1E1E)
-                        )
-                    )
+                    append(" and ")
+                    withStyle(style = SpanStyle(color = PrimaryColor, fontWeight = FontWeight.SemiBold)) {
+                        append("Privacy Policy.")
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            val footerText = buildAnnotatedString {
-                append(if (isSignIn) "Don't have an account? " else "Already have an account? ")
-                withStyle(style = SpanStyle(color = Color(0xFF334D4D), fontWeight = FontWeight.Bold)) {
-                    append(if (isSignIn) "Sign Up" else "Sign In")
-                }
+                Text(
+                    text = footerText,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = InterFont, color = Color.Gray),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            } else {
+                Spacer(modifier = Modifier.height(32.dp))
             }
-            
-            Text(
-                text = footerText,
-                modifier = Modifier
-                    .padding(bottom = 16.dp)
-                    .clickable { onToggleMode() },
-                style = MaterialTheme.typography.bodyMedium
-            )
         }
     }
 }
@@ -375,39 +447,62 @@ fun AuthTextField(
     placeholder: String,
     isPassword: Boolean = false,
     passwordVisible: Boolean = false,
-    onPasswordToggle: () -> Unit = {}
+    onPasswordToggle: () -> Unit = {},
+    trailingLabel: @Composable (() -> Unit)? = null
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-            color = Color(0xFF1E1E1E),
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+        // Label Row
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontFamily = InterFont,
+                    fontWeight = FontWeight.Bold,
+                    color = NeutralColor
+                )
+            )
+            trailingLabel?.invoke()
+        }
+
+        // Input Field
         TextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp)),
-            placeholder = { Text(placeholder, color = Color.Gray.copy(alpha = 0.5f)) },
+                .height(56.dp)
+                .clip(RoundedCornerShape(28.dp)), // Heavy rounding for pill shape
+            placeholder = {
+                Text(
+                    text = placeholder,
+                    color = Color.Gray.copy(alpha = 0.6f),
+                    style = MaterialTheme.typography.bodyLarge.copy(fontFamily = InterFont)
+                )
+            },
             visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
             trailingIcon = {
                 if (isPassword) {
                     val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                     IconButton(onClick = onPasswordToggle) {
-                        Icon(imageVector = image, contentDescription = null, tint = Color.Gray)
+                        Icon(imageVector = image, contentDescription = "Toggle password visibility", tint = Color.Gray)
                     }
                 }
             },
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFFF5F5F5),
-                unfocusedContainerColor = Color(0xFFF5F5F5),
-                disabledContainerColor = Color(0xFFF5F5F5),
+                focusedContainerColor = SecondaryColor,
+                unfocusedContainerColor = SecondaryColor,
+                disabledContainerColor = SecondaryColor,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
+                focusedTextColor = NeutralColor,
+                unfocusedTextColor = NeutralColor
             ),
-            singleLine = true
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = InterFont)
         )
     }
 }

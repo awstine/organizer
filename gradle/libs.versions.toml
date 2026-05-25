@@ -18,6 +18,8 @@ kotlin = "2.2.10"
 composeBom = "2026.02.01"
 firebaseAuth = "24.0.1"
 google-services = "4.4.2"
+google-api-client = "2.2.0"
+google-calendar = "v3-rev20240705-2.0.0"
 lifecycleViewmodelCompose = "2.7.0"
 playServicesAuth = "20.7.0"
 
@@ -48,6 +50,8 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
+google_api_client = { module = "com.google.api-client:google-api-client-android", version.ref = "google-api-client" }
+google_calendar = { module = "com.google.apis:google-api-services-calendar", version.ref = "google-calendar" }
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 
 [plugins]

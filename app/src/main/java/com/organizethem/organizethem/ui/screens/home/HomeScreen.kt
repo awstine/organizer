@@ -1,164 +1,323 @@
 package com.organizethem.organizethem.ui.screens.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddLink
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.firebase.auth.FirebaseAuth
+import androidx.hilt.navigation.compose.hiltViewModel
 
+// --- Design System Colors & Fonts ---
+val PrimaryColor = Color(0xFF334D4D)
+val SecondaryColor = Color(0xFFF5F5F5)
+val NeutralColor = Color(0xFF1E1E1E)
+val TertiaryMint = Color(0xFFE0F9F1) 
+
+val ManropeFont = FontFamily.Default
+val InterFont = FontFamily.Default
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    viewModel: HomeViewModel = hiltViewModel(),
+    onNavigateToDashboard: () -> Unit,
     onNavigateToCreateLink: () -> Unit,
     onNavigateToAvailability: () -> Unit,
     onNavigateToAppointments: () -> Unit,
     onNavigateToManageLinks: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color.White
-    ) {
+    Scaffold(
+        containerColor = Color(0xFFFAFAFA),
+        bottomBar = { 
+            CustomBottomNavigation(
+                selectedTab = BottomNavTab.Dashboard,
+                onDashboard = onNavigateToDashboard,
+                onAppointments = onNavigateToAppointments,
+                onAvailability = onNavigateToAvailability,
+                onLinks = onNavigateToManageLinks
+            ) 
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onNavigateToCreateLink,
+                containerColor = PrimaryColor,
+                contentColor = Color.White,
+                shape = RoundedCornerShape(24.dp),
+                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp)
+            ) {
+                Icon(imageVector = Icons.Outlined.Add, contentDescription = "Add")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "New Link",
+                    style = MaterialTheme.typography.labelLarge.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold)
+                )
+            }
+        }
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
+                .padding(paddingValues)
+                .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.Start
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Header Section matching SignInScreen typography
+            // --- Top App Bar ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Menu",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(24.dp).clickable { /* Open Drawer */ }
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = "Organize",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontFamily = ManropeFont,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = PrimaryColor,
+                            fontSize = 20.sp
+                        )
+                    )
+                }
+
+                // Profile Image Placeholder
+                Surface(
+                    shape = CircleShape,
+                    modifier = Modifier.size(36.dp),
+                    color = SecondaryColor
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Person,
+                        contentDescription = "Profile",
+                        tint = PrimaryColor,
+                        modifier = Modifier.padding(6.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // --- Greeting & Sync Status ---
             Text(
-                text = "Dashboard",
-                style = MaterialTheme.typography.headlineLarge.copy(
+                text = "Good morning, ${viewModel.userName}",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontFamily = ManropeFont,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 32.sp
-                ),
-                color = Color(0xFF1E1E1E)
+                    color = NeutralColor
+                )
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
-            Text(
-                text = "Manage your schedule and booking links",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(if (viewModel.isSyncing) Color.Gray else Color(0xFF4ADE80)) 
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (viewModel.isSyncing) "Syncing with Google..." else "Calendars Synced",
+                    style = MaterialTheme.typography.labelMedium.copy(fontFamily = InterFont),
+                    color = Color.Gray
+                )
+                if (viewModel.isSyncing) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 2.dp, color = PrimaryColor)
+                }
+            }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Action Cards
-            DashboardCard(
-                title = "Create Booking Link",
-                subtitle = "Share your availability with others",
-                icon = Icons.Default.AddLink,
-                onClick = onNavigateToCreateLink
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            DashboardCard(
-                title = "My Appointments",
-                subtitle = "View upcoming bookings",
-                icon = Icons.Default.CalendarMonth,
-                onClick = onNavigateToAppointments
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            DashboardCard(
-                title = "Set Availability",
-                subtitle = "Manage your weekly schedule",
-                icon = Icons.Default.Schedule,
-                onClick = onNavigateToAvailability
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            DashboardCard(
-                title = "Manage Links",
-                subtitle = "Edit or deactivate booking links",
-                icon = Icons.Default.Link,
-                onClick = onNavigateToManageLinks
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Sign Out Button matching SignInScreen button style but as an outlined error button
-            OutlinedButton(
-                onClick = { FirebaseAuth.getInstance().signOut() },
+            // --- Hero Stats Layout ---
+            Card(
+                onClick = onNavigateToAppointments,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFCDD2)),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color(0xFFD32F2F) // Soft Red
-                )
+                    .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp), spotColor = Color.Black.copy(alpha = 0.05f)),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(24.dp)
             ) {
-                Text(
-                    text = "Sign Out",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                )
+                Box(modifier = Modifier.padding(24.dp)) {
+                    Column {
+                        Text(
+                            text = "Upcoming Week",
+                            style = MaterialTheme.typography.labelMedium.copy(fontFamily = InterFont, fontWeight = FontWeight.SemiBold),
+                            color = PrimaryColor
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = viewModel.upcomingCount.toString(),
+                            style = MaterialTheme.typography.displayMedium.copy(fontFamily = ManropeFont, fontWeight = FontWeight.Bold),
+                            color = PrimaryColor,
+                            lineHeight = 40.sp
+                        )
+                        Text(
+                            text = "Appointments",
+                            style = MaterialTheme.typography.headlineMedium.copy(fontFamily = ManropeFont, fontWeight = FontWeight.SemiBold),
+                            color = PrimaryColor
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.align(Alignment.BottomEnd),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "View\nSchedule",
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold),
+                            color = PrimaryColor
+                        )
+                        Icon(
+                            imageVector = Icons.Outlined.ChevronRight,
+                            contentDescription = "View Schedule",
+                            tint = PrimaryColor,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Link Performance Card (Workable Placeholder)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = PrimaryColor),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.BarChart,
+                            contentDescription = null,
+                            tint = Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Active Links",
+                            style = MaterialTheme.typography.labelMedium.copy(fontFamily = InterFont),
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "System Online",
+                        style = MaterialTheme.typography.headlineLarge.copy(fontFamily = ManropeFont, fontWeight = FontWeight.Bold, fontSize = 24.sp),
+                        color = Color.White
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // --- Quick Actions ---
+            Text(
+                text = "QUICK ACTIONS",
+                style = MaterialTheme.typography.labelSmall.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
+                color = Color.Gray,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            ActionCard(
+                title = "Create Link",
+                subtitle = "Generate a new custom booking page",
+                icon = Icons.Outlined.Link,
+                iconBgColor = SecondaryColor,
+                onClick = onNavigateToCreateLink
+            )
+
+            ActionCard(
+                title = "My Appointments",
+                subtitle = "Review your upcoming schedule",
+                icon = Icons.Outlined.CalendarMonth,
+                iconBgColor = TertiaryMint,
+                onClick = onNavigateToAppointments
+            )
+
+            ActionCard(
+                title = "Set Availability",
+                subtitle = "Update your working hours",
+                icon = Icons.Outlined.EditCalendar,
+                iconBgColor = Color(0xFFE0E0E0),
+                onClick = onNavigateToAvailability
+            )
+
+            ActionCard(
+                title = "Manage Links",
+                subtitle = "Edit or disable scheduling links",
+                icon = Icons.Outlined.SyncAlt,
+                iconBgColor = SecondaryColor,
+                onClick = onNavigateToManageLinks
+            )
+
+            Spacer(modifier = Modifier.height(80.dp)) 
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardCard(
+fun ActionCard(
     title: String,
     subtitle: String,
     icon: ImageVector,
+    iconBgColor: Color,
     onClick: () -> Unit
 ) {
     Card(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFF5F5F5) // Matching the AuthTextField background
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 12.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon container matching the theme's brand color
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(56.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF334D4D).copy(alpha = 0.1f)),
+                    .background(iconBgColor),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = Color(0xFF334D4D), // Brand color
+                    tint = PrimaryColor,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -168,16 +327,113 @@ fun DashboardCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color(0xFF1E1E1E)
+                    style = MaterialTheme.typography.titleMedium.copy(fontFamily = ManropeFont, fontWeight = FontWeight.Bold),
+                    color = NeutralColor
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = InterFont, lineHeight = 16.sp),
                     color = Color.Gray
                 )
             }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Icon(
+                imageVector = Icons.Outlined.ChevronRight,
+                contentDescription = "Go",
+                tint = Color.LightGray
+            )
+        }
+    }
+}
+
+enum class BottomNavTab {
+    Dashboard, Bookings, Availability, Links
+}
+
+@Composable
+fun CustomBottomNavigation(
+    selectedTab: BottomNavTab,
+    onDashboard: () -> Unit,
+    onAppointments: () -> Unit,
+    onAvailability: () -> Unit,
+    onLinks: () -> Unit
+) {
+    Surface(
+        color = Color.White,
+        modifier = Modifier.shadow(elevation = 16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BottomNavItem(
+                icon = Icons.Outlined.GridView,
+                label = "Dashboard",
+                isSelected = selectedTab == BottomNavTab.Dashboard,
+                onClick = onDashboard
+            )
+            BottomNavItem(
+                icon = Icons.Outlined.EventAvailable,
+                label = "Bookings",
+                isSelected = selectedTab == BottomNavTab.Bookings,
+                onClick = onAppointments
+            )
+            BottomNavItem(
+                icon = Icons.Outlined.Schedule,
+                label = "Availability",
+                isSelected = selectedTab == BottomNavTab.Availability,
+                onClick = onAvailability
+            )
+            BottomNavItem(
+                icon = Icons.Outlined.Link,
+                label = "Links",
+                isSelected = selectedTab == BottomNavTab.Links,
+                onClick = onLinks
+            )
+        }
+    }
+}
+
+@Composable
+fun BottomNavItem(
+    icon: ImageVector,
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(if (isSelected) PrimaryColor else Color.Transparent)
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = if (isSelected) Color.White else Color.Gray,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontFamily = InterFont,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                ),
+                color = if (isSelected) Color.White else Color.Gray
+            )
         }
     }
 }

@@ -7,24 +7,20 @@ import com.organizethem.organizethem.domain.Appointment
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-//Prevent double booking
 class AppointmentsCollection @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
     suspend fun bookAppointment(appointment: Appointment): BookingResult {
         return try {
-            // Use transaction to prevent double booking
             firestore.runTransaction { transaction ->
                 val appointmentId = "${appointment.date}_${appointment.ownerId}_${appointment.startTime}"
-                val ref = firestore.collection("appointments")
-                    .document(appointmentId)
-                // Check if slot already taken
+                val ref = firestore.collection("appointments").document(appointmentId)
+                
                 val existing = transaction.get(ref)
                 if (existing.exists()) {
                     throw Exception("This time slot was just booked by someone else")
                 }
 
-                // Slot available, book it
                 transaction.set(ref, mapOf(
                     "appointmentId" to appointmentId,
                     "ownerId" to appointment.ownerId,
@@ -34,12 +30,15 @@ class AppointmentsCollection @Inject constructor(
                     "endTime" to appointment.endTime,
                     "bookerName" to appointment.bookerName,
                     "bookerEmail" to appointment.bookerEmail,
-                    "status" to "scheduled",
+                    "status" to appointment.status,
                     "duration" to appointment.duration,
+                    "meetingType" to appointment.meetingType,
+                    "location" to appointment.location,
+                    "meetLink" to appointment.meetLink,
+                    "googleEventId" to appointment.googleEventId,
                     "createdAt" to FieldValue.serverTimestamp()
                 ))
             }.await()
-
             BookingResult.Success
         } catch (e: Exception) {
             BookingResult.Error(e.localizedMessage ?: "Booking failed")
@@ -65,6 +64,18 @@ class AppointmentsCollection @Inject constructor(
             .mapNotNull { it.getString("startTime") }
     }
 
+    suspend fun cancelAppointment(appointmentId: String) {
+        firestore.collection("appointments").document(appointmentId).delete().await()
+    }
+
+    suspend fun updateSyncDetails(appointmentId: String, googleEventId: String, meetLink: String?) {
+        firestore.collection("appointments").document(appointmentId)
+            .update(mapOf(
+                "googleEventId" to googleEventId,
+                "meetLink" to meetLink
+            )).await()
+    }
+
     private fun DocumentSnapshot.toAppointment(): Appointment? {
         return if (exists()) {
             Appointment(
@@ -77,7 +88,11 @@ class AppointmentsCollection @Inject constructor(
                 bookerName = getString("bookerName") ?: "",
                 bookerEmail = getString("bookerEmail") ?: "",
                 status = getString("status") ?: "scheduled",
-                duration = getLong("duration")?.toInt() ?: 0
+                duration = getLong("duration")?.toInt() ?: 30,
+                meetingType = getString("meetingType") ?: "online",
+                location = getString("location") ?: "",
+                meetLink = getString("meetLink"),
+                googleEventId = getString("googleEventId")
             )
         } else null
     }

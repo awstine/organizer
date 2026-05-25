@@ -6,7 +6,7 @@ import com.organizethem.organizethem.domain.User
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-//Stroring users in firestore and not only in firebase auth
+//Storing users in firestore and not only in firebase auth
 class UsersCollection @Inject constructor(
     private val firestore: FirebaseFirestore
 ){

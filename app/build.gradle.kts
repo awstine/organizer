@@ -41,6 +41,15 @@ android {
     buildFeatures {
         compose = true
     }
+
+    packaging {
+        resources {
+            excludes.add("/META-INF/INDEX.LIST")
+            excludes.add("/META-INF/DEPENDENCIES")
+            excludes.add("/META-INF/LICENSE*")
+            excludes.add("/META-INF/NOTICE*")
+        }
+    }
 }
 
 dependencies {
@@ -81,4 +90,8 @@ dependencies {
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
+
+    // Google API Client & Calendar
+    implementation(libs.google.api.client)
+    implementation(libs.google.calendar)
 }

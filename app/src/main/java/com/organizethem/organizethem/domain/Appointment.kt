@@ -1,8 +1,5 @@
 package com.organizethem.organizethem.domain
 
-import kotlin.time.Duration
-
-
 data class Appointment(
     val appointmentId: String,
     val ownerId: String,
@@ -13,5 +10,9 @@ data class Appointment(
     val bookerName: String,
     val bookerEmail: String,
     val duration: Int,
-    val status: String = "scheduled"
+    val status: String = "scheduled",
+    val meetingType: String = "online", // "online" or "in-person"
+    val location: String = "",
+    val meetLink: String? = null,
+    val googleEventId: String? = null
 )
