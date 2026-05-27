@@ -1,3 +1,5 @@
+@file:Suppress("PreviewAnnotationInFunctionWithParameters")
+
 package com.organizethem.organizethem.ui.screens.booker
 
 import androidx.compose.foundation.BorderStroke
@@ -31,6 +33,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -49,7 +52,7 @@ val InterFont = FontFamily.Default
 @Composable
 fun BookerCalendarScreen(
     linkId: String,
-    onTimeSlotSelected: (String, String, Int) -> Unit
+    onTimeSlotSelected: (String, String, Int, String) -> Unit
 ) {
     val viewModel: BookerCalendarViewModel = hiltViewModel()
 
@@ -100,7 +103,8 @@ fun BookerCalendarScreen(
                                 onTimeSlotSelected(
                                     viewModel.selectedDate!!,
                                     selectedTimeSlot!!,
-                                    viewModel.link?.duration ?: 30
+                                    viewModel.link?.duration ?: 30,
+                                    viewModel.selectedMeetingType
                                 )
                             },
                             shape = RoundedCornerShape(24.dp),
@@ -171,6 +175,36 @@ fun BookerCalendarScreen(
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
+
+                // --- Guest Choice: Online vs In-person ---
+                if (viewModel.link?.meetingType == "both") {
+                    Text(
+                        text = "How should we meet?",
+                        style = MaterialTheme.typography.titleSmall.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold),
+                        color = PrimaryColor,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        MeetingChoiceCard(
+                            title = "Online",
+                            icon = Icons.Outlined.Videocam,
+                            isSelected = viewModel.selectedMeetingType == "online",
+                            onClick = { viewModel.selectedMeetingType = "online" },
+                            modifier = Modifier.weight(1f)
+                        )
+                        MeetingChoiceCard(
+                            title = "In-person",
+                            icon = Icons.Outlined.Public,
+                            isSelected = viewModel.selectedMeetingType == "in-person",
+                            onClick = { viewModel.selectedMeetingType = "in-person" },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
 
                 // Timezone Pill
                 Surface(
@@ -325,6 +359,43 @@ fun BookerCalendarScreen(
             }
 
             Spacer(modifier = Modifier.height(100.dp)) // Extra space for the sticky bottom bar
+        }
+    }
+}
+
+@Composable
+fun MeetingChoiceCard(
+    title: String,
+    icon: ImageVector,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .height(56.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        color = if (isSelected) PrimaryColor else Color.White,
+        border = if (isSelected) null else BorderStroke(1.dp, Color(0xFFEEEEEE))
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (isSelected) Color.White else PrimaryColor,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelLarge.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold),
+                color = if (isSelected) Color.White else PrimaryColor
+            )
         }
     }
 }

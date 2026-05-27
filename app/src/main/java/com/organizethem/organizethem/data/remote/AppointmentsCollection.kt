@@ -92,7 +92,8 @@ class AppointmentsCollection @Inject constructor(
                 meetingType = getString("meetingType") ?: "online",
                 location = getString("location") ?: "",
                 meetLink = getString("meetLink"),
-                googleEventId = getString("googleEventId")
+                googleEventId = getString("googleEventId"),
+                createdAt = getTimestamp("createdAt")?.toDate()?.time
             )
         } else null
     }

@@ -14,5 +14,6 @@ data class Appointment(
     val meetingType: String = "online", // "online" or "in-person"
     val location: String = "",
     val meetLink: String? = null,
-    val googleEventId: String? = null
+    val googleEventId: String? = null,
+    val createdAt: Long? = null // Timestamp in milliseconds
 )
