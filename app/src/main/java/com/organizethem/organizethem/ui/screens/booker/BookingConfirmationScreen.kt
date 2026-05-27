@@ -34,10 +34,16 @@ fun BookingConfirmationScreen(
     selectedDate: String,
     selectedTime: String,
     duration: Int,
+    meetingType: String,
     onBookingComplete: () -> Unit,
     onBack: () -> Unit
 ) {
     val viewModel: BookingConfirmationViewModel = hiltViewModel()
+
+    // Pass the guest's choice to the viewmodel
+    LaunchedEffect(meetingType) {
+        viewModel.guestSelectedMeetingType = meetingType
+    }
 
     Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
         Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
@@ -53,22 +59,20 @@ fun BookingConfirmationScreen(
                     DetailRow("Date", selectedDate)
                     DetailRow("Time", "$selectedTime (${duration} min)")
                     
-                    viewModel.meetingType?.let { type ->
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                if (type == "online") Icons.Default.VideoCall else Icons.Default.LocationOn,
-                                null,
-                                tint = Color(0xFF334D4D),
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                if (type == "online") "Google Meet Online" else "In-Person: ${viewModel.location}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            if (viewModel.guestSelectedMeetingType == "online") Icons.Default.VideoCall else Icons.Default.LocationOn,
+                            null,
+                            tint = Color(0xFF334D4D),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            if (viewModel.guestSelectedMeetingType == "online") "Google Meet Online" else "In-Person: ${viewModel.location}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }
@@ -146,6 +150,7 @@ class BookingConfirmationViewModel @Inject constructor(
     
     var meetingType by mutableStateOf<String?>(null)
     var location by mutableStateOf("")
+    var guestSelectedMeetingType by mutableStateOf("online")
 
     fun loadDetails(linkId: String) {
         viewModelScope.launch {
@@ -176,8 +181,9 @@ class BookingConfirmationViewModel @Inject constructor(
                 bookerName = bookerName,
                 bookerEmail = bookerEmail,
                 duration = duration,
-                meetingType = link.meetingType,
-                location = link.location
+                meetingType = guestSelectedMeetingType,
+                location = if (guestSelectedMeetingType == "online") "Google Meet" else link.location,
+                createdAt = System.currentTimeMillis()
             )
 
             when (appointmentsCollection.bookAppointment(appointment)) {

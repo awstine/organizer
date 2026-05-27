@@ -32,9 +32,11 @@ class BookerCalendarViewModel @Inject constructor(
     var selectedDate by mutableStateOf<String?>(null)
     var availableSlots by mutableStateOf<List<String>>(emptyList())
     var isLoadingSlots by mutableStateOf(false)
+    var selectedMeetingType by mutableStateOf("online") // Guest's choice
 
     suspend fun loadLink(linkId: String) {
         link = bookingLinksCollection.getLink(linkId) ?: return
+        selectedMeetingType = if (link?.meetingType == "in-person") "in-person" else "online"
 
         // Generate next 30 days
         val dates = (0..30).map { daysToAdd ->
