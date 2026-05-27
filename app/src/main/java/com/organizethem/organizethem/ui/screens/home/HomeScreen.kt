@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -65,7 +66,7 @@ fun HomeScreen(
                 Icon(imageVector = Icons.Outlined.Add, contentDescription = "Add")
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "New Link",
+                    text = "Create New Link",
                     style = MaterialTheme.typography.labelLarge.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold)
                 )
             }
@@ -125,10 +126,21 @@ fun HomeScreen(
 
             // --- Greeting & Sync Status ---
             Text(
-                text = "Good morning, ${viewModel.userName}",
+                text = "Good morning,",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontFamily = ManropeFont,
                     fontWeight = FontWeight.Bold,
+                    color = NeutralColor
+                )
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = viewModel.userName,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontFamily = ManropeFont,
+                    fontWeight = FontWeight.SemiBold,
                     color = NeutralColor
                 )
             )
@@ -185,23 +197,6 @@ fun HomeScreen(
                             color = PrimaryColor
                         )
                     }
-
-                    Row(
-                        modifier = Modifier.align(Alignment.BottomEnd),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "View\nSchedule",
-                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold),
-                            color = PrimaryColor
-                        )
-                        Icon(
-                            imageVector = Icons.Outlined.ChevronRight,
-                            contentDescription = "View Schedule",
-                            tint = PrimaryColor,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
                 }
             }
 
@@ -239,45 +234,54 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- Quick Actions ---
-            Text(
-                text = "QUICK ACTIONS",
-                style = MaterialTheme.typography.labelSmall.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
-                color = Color.Gray,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            // Recent Activity
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "RECENT ACTIVITY",
+                    style = MaterialTheme.typography.labelSmall.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
+                    color = Color.Gray
+                )
+                Text(
+                    text = "View all",
+                    style = MaterialTheme.typography.labelSmall.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold, color = Color.Gray),
+                    modifier = Modifier.clickable { /* View All */ }
+                )
+            }
 
-            ActionCard(
-                title = "Create Link",
-                subtitle = "Generate a new custom booking page",
-                icon = Icons.Outlined.Link,
-                iconBgColor = SecondaryColor,
-                onClick = onNavigateToCreateLink
-            )
+            Spacer(modifier = Modifier.height(16.dp))
 
-            ActionCard(
-                title = "My Appointments",
-                subtitle = "Review your upcoming schedule",
-                icon = Icons.Outlined.CalendarMonth,
-                iconBgColor = TertiaryMint,
-                onClick = onNavigateToAppointments
-            )
-
-            ActionCard(
-                title = "Set Availability",
-                subtitle = "Update your working hours",
-                icon = Icons.Outlined.EditCalendar,
-                iconBgColor = Color(0xFFE0E0E0),
-                onClick = onNavigateToAvailability
-            )
-
-            ActionCard(
-                title = "Manage Links",
-                subtitle = "Edit or disable scheduling links",
-                icon = Icons.Outlined.SyncAlt,
-                iconBgColor = SecondaryColor,
-                onClick = onNavigateToManageLinks
-            )
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                color = Color.White,
+                shadowElevation = 2.dp
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    if (viewModel.recentActivities.isEmpty()) {
+                        Text(
+                            text = "No recent activity",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = InterFont),
+                            color = Color.LightGray,
+                            modifier = Modifier.padding(16.dp).align(Alignment.CenterHorizontally)
+                        )
+                    } else {
+                        viewModel.recentActivities.forEachIndexed { index, activity ->
+                            RecentActivityItem(activity = activity)
+                            if (index < viewModel.recentActivities.size - 1) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 12.dp),
+                                    color = Color(0xFFF5F5F5)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(80.dp)) 
         }
@@ -285,69 +289,81 @@ fun HomeScreen(
 }
 
 @Composable
-fun ActionCard(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    iconBgColor: Color,
-    onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
+fun RecentActivityItem(activity: RecentActivity) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 12.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.Top
     ) {
-        Row(
+        val (icon, color, bgColor) = when (activity.type) {
+            ActivityType.NEW_BOOKING -> Triple(Icons.Outlined.EventAvailable, PrimaryColor, Color(0xFFF0F4F4))
+            ActivityType.COMPLETED -> Triple(Icons.Outlined.CheckCircle, Color(0xFF4ADE80), Color(0xFFF0FDF4))
+            ActivityType.CANCELED -> Triple(Icons.Outlined.Cancel, Color(0xFFF87171), Color(0xFFFEF2F2))
+        }
+
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(bgColor),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(iconBgColor),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = PrimaryColor,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium.copy(fontFamily = ManropeFont, fontWeight = FontWeight.Bold),
-                    color = NeutralColor
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = InterFont, lineHeight = 16.sp),
-                    color = Color.Gray
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
             Icon(
-                imageVector = Icons.Outlined.ChevronRight,
-                contentDescription = "Go",
-                tint = Color.LightGray
+                imageVector = icon,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(18.dp)
             )
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = activity.title,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontFamily = ManropeFont,
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 20.sp
+                        ),
+                        color = NeutralColor
+                    )
+                    Text(
+                        text = activity.subtitle,
+                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = InterFont),
+                        color = Color.Gray
+                    )
+                    if (activity.relativeTime.isNotEmpty()) {
+                        Text(
+                            text = "• ${activity.relativeTime}",
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = InterFont),
+                            color = Color.Gray.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+
+                Text(
+                    text = activity.timeLabel,
+                    textAlign = TextAlign.End,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontFamily = InterFont,
+                        fontWeight = if (activity.type == ActivityType.CANCELED) FontWeight.Bold else FontWeight.Normal
+                    ),
+                    color = if (activity.type == ActivityType.CANCELED) Color(0xFFAA4444) else Color.Gray,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
         }
     }
 }
+
 
 enum class BottomNavTab {
     Dashboard, Bookings, Availability, Links

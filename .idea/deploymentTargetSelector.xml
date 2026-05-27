@@ -13,7 +13,7 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="SignInScreenTest">
+      <SelectionState runConfigName="BookerCalendarScreen">
         <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2026-05-10T11:27:40.388819Z">
           <Target type="DEFAULT_BOOT">
