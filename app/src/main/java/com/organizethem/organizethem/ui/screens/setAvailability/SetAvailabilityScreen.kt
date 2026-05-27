@@ -1,6 +1,5 @@
 package com.organizethem.organizethem.ui.screens.setAvailability
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,22 +20,18 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.organizethem.organizethem.ui.screens.home.BottomNavItem // Reusing your existing nav
+import com.organizethem.organizethem.ui.components.TimeBox
+import com.organizethem.organizethem.ui.components.TimePickerWrapper
 import com.organizethem.organizethem.ui.screens.home.BottomNavTab
 import com.organizethem.organizethem.ui.screens.home.CustomBottomNavigation
-import java.util.Locale
 
 // --- Design System Colors & Fonts ---
 val PrimaryColor = Color(0xFF334D4D)
 val SecondaryColor = Color(0xFFF5F5F5)
 val NeutralColor = Color(0xFF1E1E1E)
-val MintGreen = Color(0xFF98FFD9)
-val DarkCardGreen = Color(0xFF14362E) // The dark green for the link preview
-val CardInnerGreen = Color(0xFF1F4A40) // The lighter green inside the link preview
 
 val ManropeFont = FontFamily.Default
 val InterFont = FontFamily.Default
@@ -50,12 +45,17 @@ fun SetAvailabilityScreen(
     onNavigateToLinks: () -> Unit,
     onSaved: () -> Unit
 ) {
-    // Local states for the new link form
-    var meetingName by remember { mutableStateOf("") }
-    var selectedDuration by remember { mutableStateOf(15) }
+    val scrollState = rememberScrollState()
+    
+    // Time Picker State
+    var showTimePicker by remember { mutableStateOf(false) }
+    var pickingForDay by remember { mutableStateOf("") }
+    var pickingStartTime by remember { mutableStateOf(true) }
+    var initialHour by remember { mutableIntStateOf(9) }
+    var initialMinute by remember { mutableIntStateOf(0) }
 
     Scaffold(
-        containerColor = Color(0xFFFAFAFA), // Off-white background
+        containerColor = Color(0xFFFAFAFA),
         bottomBar = {
             CustomBottomNavigation(
                 selectedTab = BottomNavTab.Availability,
@@ -67,7 +67,7 @@ fun SetAvailabilityScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { /* Handle FAB click */ },
+                onClick = { /* New Slot Logic */ },
                 containerColor = PrimaryColor,
                 contentColor = Color.White,
                 shape = RoundedCornerShape(24.dp),
@@ -87,7 +87,7 @@ fun SetAvailabilityScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -163,18 +163,41 @@ fun SetAvailabilityScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // --- Days List ---
-            listOf(
-                "MON" to viewModel.monday,
-                "TUE" to viewModel.tuesday,
-                "SUN" to viewModel.sunday // Mocking the exact screenshot
-            ).forEach { (dayName, schedule) ->
+            val daysList = listOf(
+                "MON" to "monday", "TUE" to "tuesday", "WED" to "wednesday",
+                "THU" to "thursday", "FRI" to "friday", "SAT" to "saturday", "SUN" to "sunday"
+            )
+
+            daysList.forEach { (abbrev, full) ->
+                val schedule = when(full) {
+                    "monday" -> viewModel.monday
+                    "tuesday" -> viewModel.tuesday
+                    "wednesday" -> viewModel.wednesday
+                    "thursday" -> viewModel.thursday
+                    "friday" -> viewModel.friday
+                    "saturday" -> viewModel.saturday
+                    else -> viewModel.sunday
+                }
+
                 VisualDayScheduleCard(
-                    dayName = dayName,
+                    dayAbbrev = abbrev,
                     schedule = schedule,
-                    onScheduleChange = { updatedSchedule ->
-                        // Pass full lowercase name to viewmodel
-                        val fullDay = when(dayName) { "MON" -> "monday"; "TUE" -> "tuesday"; else -> "sunday" }
-                        viewModel.updateDay(fullDay, updatedSchedule)
+                    onEnabledChange = { enabled ->
+                        viewModel.updateDay(full, schedule.copy(enabled = enabled))
+                    },
+                    onStartTimeClick = {
+                        pickingForDay = full
+                        pickingStartTime = true
+                        initialHour = schedule.startHour
+                        initialMinute = schedule.startMinute
+                        showTimePicker = true
+                    },
+                    onEndTimeClick = {
+                        pickingForDay = full
+                        pickingStartTime = false
+                        initialHour = schedule.endHour
+                        initialMinute = schedule.endMinute
+                        showTimePicker = true
                     }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -182,162 +205,73 @@ fun SetAvailabilityScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- New Scheduling Link Section ---
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "New Scheduling Link",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontFamily = ManropeFont,
-                        fontWeight = FontWeight.Bold,
-                        color = PrimaryColor
-                    )
-                )
-                // Small decorative underline
-                Row(modifier = Modifier.padding(top = 4.dp)) {
-                    Box(modifier = Modifier.width(24.dp).height(3.dp).clip(RoundedCornerShape(1.5.dp)).background(PrimaryColor))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Box(modifier = Modifier.width(16.dp).height(3.dp).clip(RoundedCornerShape(1.5.dp)).background(Color.LightGray.copy(alpha = 0.5f)))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Box(modifier = Modifier.width(16.dp).height(3.dp).clip(RoundedCornerShape(1.5.dp)).background(Color.LightGray.copy(alpha = 0.5f)))
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Meeting Name
-            Text("Meeting Name", style = MaterialTheme.typography.labelMedium.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold, color = PrimaryColor))
-            Spacer(modifier = Modifier.height(8.dp))
-            TextField(
-                value = meetingName,
-                onValueChange = { meetingName = it },
-                modifier = Modifier.fillMaxWidth().height(56.dp).clip(RoundedCornerShape(12.dp)),
-                placeholder = { Text("e.g. Discovery Consultation", color = Color.Gray.copy(alpha = 0.8f)) },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = SecondaryColor,
-                    unfocusedContainerColor = SecondaryColor,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                ),
-                textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = InterFont)
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Duration Selector
-            Text("Duration", style = MaterialTheme.typography.labelMedium.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold, color = PrimaryColor))
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                listOf(15, 30, 60).forEach { duration ->
-                    DurationPill(
-                        duration = duration,
-                        isSelected = selectedDuration == duration,
-                        onClick = { selectedDuration = duration },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Platform Dropdown Mock
-            Text("Platform", style = MaterialTheme.typography.labelMedium.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold, color = PrimaryColor))
-            Spacer(modifier = Modifier.height(8.dp))
-            Surface(
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = SecondaryColor
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Google Meet", style = MaterialTheme.typography.bodyLarge.copy(fontFamily = InterFont, color = NeutralColor))
-                    Icon(imageVector = Icons.Outlined.ExpandMore, contentDescription = "Select", tint = NeutralColor)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Generate Link Button
+            // --- Save Button ---
             Button(
-                onClick = { /* Handle logic */ },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
+                onClick = { 
+                    viewModel.save()
+                    onSaved()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Generate Link", style = MaterialTheme.typography.titleMedium.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(imageVector = Icons.Outlined.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
-                }
+                Text(
+                    text = "Save Availability",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontFamily = InterFont,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // --- Link Preview Card ---
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkCardGreen)
-            ) {
-                Column(modifier = Modifier.padding(24.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Outlined.Link, contentDescription = null, tint = PrimaryColor, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Link Preview", style = MaterialTheme.typography.labelMedium.copy(fontFamily = InterFont), color = PrimaryColor)
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        color = CardInnerGreen
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "organize.com/alexm/discove...",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = InterFont),
-                                color = Color.White.copy(alpha = 0.7f),
-                                maxLines = 1,
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            Surface(
-                                shape = CircleShape,
-                                color = MintGreen,
-                                modifier = Modifier.size(40.dp).clickable { /* Copy Link */ }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.ContentCopy,
-                                    contentDescription = "Copy",
-                                    tint = DarkCardGreen,
-                                    modifier = Modifier.padding(10.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(100.dp)) // Buffer for FAB
+            Spacer(modifier = Modifier.height(100.dp))
         }
+    }
+
+    if (showTimePicker) {
+        TimePickerWrapper(
+            initialHour = initialHour,
+            initialMinute = initialMinute,
+            onTimeSelected = { hour, minute ->
+                val currentSchedule = when(pickingForDay) {
+                    "monday" -> viewModel.monday
+                    "tuesday" -> viewModel.tuesday
+                    "wednesday" -> viewModel.wednesday
+                    "thursday" -> viewModel.thursday
+                    "friday" -> viewModel.friday
+                    "saturday" -> viewModel.saturday
+                    else -> viewModel.sunday
+                }
+                
+                val updatedSchedule = if (pickingStartTime) {
+                    currentSchedule.copy(startHour = hour, startMinute = minute)
+                } else {
+                    currentSchedule.copy(endHour = hour, endMinute = minute)
+                }
+                
+                viewModel.updateDay(pickingForDay, updatedSchedule)
+                showTimePicker = false
+            },
+            onDismiss = { showTimePicker = false }
+        )
     }
 }
 
 @Composable
 fun VisualDayScheduleCard(
-    dayName: String,
+    dayAbbrev: String,
     schedule: DayScheduleState,
-    onScheduleChange: (DayScheduleState) -> Unit
+    onEnabledChange: (Boolean) -> Unit,
+    onStartTimeClick: () -> Unit,
+    onEndTimeClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth().shadow(elevation = 2.dp, shape = RoundedCornerShape(16.dp), spotColor = Color.Black.copy(alpha = 0.05f)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(elevation = 2.dp, shape = RoundedCornerShape(16.dp), spotColor = Color.Black.copy(alpha = 0.05f)),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
@@ -348,16 +282,16 @@ fun VisualDayScheduleCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Day Label & Switch
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = dayName,
+                        text = dayAbbrev,
                         style = MaterialTheme.typography.labelLarge.copy(fontFamily = InterFont, fontWeight = FontWeight.ExtraBold),
                         color = if (schedule.enabled) PrimaryColor else Color.Gray,
                         modifier = Modifier.width(48.dp)
                     )
                     Switch(
                         checked = schedule.enabled,
-                        onCheckedChange = { checked -> onScheduleChange(schedule.copy(enabled = checked)) },
+                        onCheckedChange = onEnabledChange,
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
                             checkedTrackColor = PrimaryColor,
@@ -365,39 +299,52 @@ fun VisualDayScheduleCard(
                             uncheckedTrackColor = Color(0xFFE0E0E0),
                             uncheckedBorderColor = Color.Transparent
                         ),
-                        modifier = Modifier.scale(0.8f) // Slightly smaller switch to match mockup
+                        modifier = Modifier.scale(0.8f)
                     )
                 }
 
-                // Time Text
+                // Time Pickers
                 if (schedule.enabled) {
-                    Text(
-                        text = "${formatTime(schedule.startHour, schedule.startMinute)} — ${formatTime(schedule.endHour, schedule.endMinute)}",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontFamily = InterFont, fontWeight = FontWeight.Medium),
-                        color = NeutralColor
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TimeBox(
+                            hour = schedule.startHour,
+                            minute = schedule.startMinute,
+                            onClick = onStartTimeClick
+                        )
+                        Text(
+                            text = " — ",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                        TimeBox(
+                            hour = schedule.endHour,
+                            minute = schedule.endMinute,
+                            onClick = onEndTimeClick
+                        )
+                    }
                 } else {
                     Text(
                         text = "Unavailable",
                         style = MaterialTheme.typography.bodyMedium.copy(fontFamily = InterFont),
-                        color = Color.Gray
+                        color = Color.Gray.copy(alpha = 0.6f)
                     )
                 }
             }
 
-            // Visual Time Bar (Only shown if enabled)
+            // Visual Time Bar
             if (schedule.enabled) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 Box(modifier = Modifier.fillMaxWidth().padding(start = 48.dp)) {
-                    // Background track (Gray)
                     Box(modifier = Modifier.fillMaxWidth().height(4.dp).clip(CircleShape).background(Color(0xFFEEEEEE)))
-
-                    // Active track (Green)
-                    // Note: In a real app, calculate exact width/offset based on startHour and endHour out of 24h.
-                    // For mockup accuracy, we represent it roughly in the middle.
+                    
+                    val startPos = (schedule.startHour + schedule.startMinute / 60f) / 24f
+                    val endPos = (schedule.endHour + schedule.endMinute / 60f) / 24f
+                    val widthFraction = (endPos - startPos).coerceIn(0f, 1f)
+                    
                     Box(modifier = Modifier
-                        .fillMaxWidth(0.5f) // Representing 8 hours out of roughly workable hours
-                        .offset(x = 30.dp)  // Offset to represent starting at 9 AM
+                        .fillMaxWidth(widthFraction)
+                        .padding(start = (startPos * 100).dp)
                         .height(4.dp)
                         .clip(CircleShape)
                         .background(PrimaryColor)
@@ -406,37 +353,4 @@ fun VisualDayScheduleCard(
             }
         }
     }
-}
-
-@Composable
-fun DurationPill(
-    duration: Int,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier.height(56.dp).clickable { onClick() },
-        shape = CircleShape,
-        color = if (isSelected) PrimaryColor else Color.White,
-        border = if (isSelected) null else BorderStroke(1.dp, Color.LightGray)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Text(
-                text = "${duration}m",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontFamily = InterFont,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                ),
-                color = if (isSelected) Color.White else NeutralColor
-            )
-        }
-    }
-}
-
-// Helper function to format 24h time to 12h AM/PM format matching the mockup
-fun formatTime(hour: Int, minute: Int): String {
-    val amPm = if (hour >= 12) "PM" else "AM"
-    val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
-    return String.format(Locale.getDefault(), "%02d:%02d %s", displayHour, minute, amPm)
 }
