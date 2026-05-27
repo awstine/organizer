@@ -144,9 +144,9 @@ fun AppNavGraph(
 
             BookerCalendarScreen(
                 linkId = linkId,
-                onTimeSlotSelected = { date, time, duration ->
+                onTimeSlotSelected = { date, time, duration, type ->
                     navController.navigate(
-                        Screen.BookingConfirmation.createRoute(linkId, date, time, duration)
+                        Screen.BookingConfirmation.createRoute(linkId, date, time, duration, type)
                     )
                 }
             )
@@ -158,19 +158,22 @@ fun AppNavGraph(
                 navArgument("linkId") { type = NavType.StringType },
                 navArgument("date") { type = NavType.StringType },
                 navArgument("time") { type = NavType.StringType },
-                navArgument("duration") { type = NavType.IntType }
+                navArgument("duration") { type = NavType.IntType },
+                navArgument("type") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val linkId = backStackEntry.arguments?.getString("linkId") ?: return@composable
             val date = backStackEntry.arguments?.getString("date") ?: return@composable
             val time = backStackEntry.arguments?.getString("time") ?: return@composable
             val duration = backStackEntry.arguments?.getInt("duration") ?: 30
+            val type = backStackEntry.arguments?.getString("type") ?: "online"
 
             BookingConfirmationScreen(
                 linkId = linkId,
                 selectedDate = date,
                 selectedTime = time,
                 duration = duration,
+                meetingType = type,
                 onBookingComplete = {
                     navController.popBackStack(Screen.BookerCalendar.createRoute(linkId), true)
                 },

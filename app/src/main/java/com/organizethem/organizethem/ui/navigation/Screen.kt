@@ -12,8 +12,8 @@ sealed class Screen(val route: String) {
     object BookerCalendar : Screen("book/{linkId}") {
         fun createRoute(linkId: String) = "book/$linkId"
     }
-    object BookingConfirmation : Screen("book/{linkId}/confirm?date={date}&time={time}&duration={duration}") {
-        fun createRoute(linkId: String, date: String, time: String, duration: Int) =
-            "book/$linkId/confirm?date=$date&time=$time&duration=$duration"
+    object BookingConfirmation : Screen("book/{linkId}/confirm?date={date}&time={time}&duration={duration}&type={type}") {
+        fun createRoute(linkId: String, date: String, time: String, duration: Int, type: String) =
+            "book/$linkId/confirm?date=$date&time=$time&duration=$duration&type=$type"
     }
 }
