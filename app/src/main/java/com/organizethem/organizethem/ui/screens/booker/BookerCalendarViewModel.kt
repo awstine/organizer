@@ -100,7 +100,28 @@ class BookerCalendarViewModel @Inject constructor(
                 }
 
                 val bookedSlots = appointmentsCollection.getBookedSlots(link.ownerId, date)
-                availableSlots = TimeSlotGenerator.generateSlots(schedule, link.duration, bookedSlots)
+                
+                // Use custom hours if provided by the link, otherwise fallback to general availability
+                val effectiveSchedule = if (link.customStartHour != null && link.customEndHour != null) {
+                    schedule.copy(
+                        startHour = link.customStartHour,
+                        startMinute = link.customStartMinute ?: 0,
+                        endHour = link.customEndHour,
+                        endMinute = link.customEndMinute ?: 0
+                    )
+                } else if (link.meetingType == "in-person" && link.customStartHour != null) {
+                    // For in-person, we might just have a specific meetup time
+                    schedule.copy(
+                        startHour = link.customStartHour,
+                        startMinute = link.customStartMinute ?: 0,
+                        endHour = link.customStartHour,
+                        endMinute = (link.customStartMinute ?: 0) + link.duration
+                    )
+                } else {
+                    schedule
+                }
+
+                availableSlots = TimeSlotGenerator.generateSlots(effectiveSchedule, link.duration, bookedSlots)
             } finally {
                 isLoadingSlots = false
             }

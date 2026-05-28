@@ -227,7 +227,16 @@
             const bookedSnap = await getDocs(q);
             const bookedTimes = bookedSnap.docs.map(doc => doc.data().startTime);
 
-            const slots = generateSlots(schedule, linkData.duration, bookedTimes);
+            // Use link-specific window if available, otherwise general availability
+            const effectiveSchedule = {
+                enabled: schedule ? schedule.enabled : false,
+                startHour: linkData.customStartHour !== undefined ? linkData.customStartHour : (schedule ? schedule.startHour : 9),
+                startMinute: linkData.customStartMinute !== undefined ? linkData.customStartMinute : (schedule ? schedule.startMinute : 0),
+                endHour: linkData.customEndHour !== undefined ? linkData.customEndHour : (schedule ? schedule.endHour : 17),
+                endMinute: linkData.customEndMinute !== undefined ? linkData.customEndMinute : (schedule ? schedule.endMinute : 0)
+            };
+
+            const slots = generateSlots(effectiveSchedule, linkData.duration, bookedTimes);
 
             if (slots.length === 0) {
                 timeGridEl.innerHTML = '<div class="col-span-2 text-center py-8 text-slate-400 bg-white rounded-xl">No slots available</div>';

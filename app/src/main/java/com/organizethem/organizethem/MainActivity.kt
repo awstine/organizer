@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
     private fun extractDeepLink(intent: Intent?): String? {
         if (intent?.action == Intent.ACTION_VIEW) {
             val uri = intent.data
-            // Handle both: organizing://book/abc123 and https://organizing.app/book/abc123
+            // Handle both: organizing://book/abc123 and https://ecotrack-846b1.web.app/book/abc123
             return uri?.lastPathSegment
         }
         return null

@@ -25,33 +25,43 @@ class CreateLinkViewModel @Inject constructor(
     var meetingType by mutableStateOf("online") // "online", "in-person", "both"
     var location by mutableStateOf("")
     
-    // Time restrictions for this link (Optional, defaults to 9-5 if needed or inherits general)
+    // Time restrictions for this link
     var startHour by mutableIntStateOf(9)
     var startMinute by mutableIntStateOf(0)
-    var endHour by mutableIntStateOf(17)
+    var endHour by mutableIntStateOf(10) // Default to 1 hour window
     var endMinute by mutableIntStateOf(0)
     
     // For In-person Meetup Time
     var meetupHour by mutableIntStateOf(10)
     var meetupMinute by mutableIntStateOf(0)
+    var meetupEndHour by mutableIntStateOf(11)
+    var meetupEndMinute by mutableIntStateOf(0)
 
     var createdLinkId by mutableStateOf<String?>(null)
 
     fun createLink() {
         viewModelScope.launch {
-            val linkId = UUID.randomUUID().toString().take(8)
+            val linkId = UUID.randomUUID().toString().replace("-", "").take(8)
             val userId = authDataSource.getCurrentUser()?.uid ?: return@launch
 
-            // You could store the custom hours in 'location' or a new field if you update the domain.
-            // For now, I'll store them in a way that respects your request.
+            val startTimeTotal = if (meetingType == "in-person") meetupHour * 60 + meetupMinute else startHour * 60 + startMinute
+            val endTimeTotal = if (meetingType == "in-person") meetupEndHour * 60 + meetupEndMinute else endHour * 60 + endMinute
+            
+            // Calculate duration based on the window
+            val calculatedDuration = (endTimeTotal - startTimeTotal).coerceAtLeast(5)
+
             val link = BookingLink(
                 linkId = linkId,
                 ownerId = userId,
                 title = title,
-                duration = duration,
+                duration = calculatedDuration,
                 description = description,
                 meetingType = meetingType,
-                location = if (meetingType == "in-person") "Meetup at $location" else location
+                location = location,
+                customStartHour = if (meetingType != "in-person") startHour else meetupHour,
+                customStartMinute = if (meetingType != "in-person") startMinute else meetupMinute,
+                customEndHour = if (meetingType != "in-person") endHour else meetupEndHour,
+                customEndMinute = if (meetingType != "in-person") endMinute else meetupEndMinute
             )
 
             bookingLinksCollection.createLink(link)

@@ -7,6 +7,10 @@ data class BookingLink(
     val duration: Int,
     val description: String = "",
     val active: Boolean = true,
-    val meetingType: String = "online", // "online", "in-person", "choice"
-    val location: String = "" // Physical address if in-person is forced
+    val meetingType: String = "online", // "online", "in-person", "both"
+    val location: String = "",
+    val customStartHour: Int? = null,
+    val customStartMinute: Int? = null,
+    val customEndHour: Int? = null,
+    val customEndMinute: Int? = null
 )

@@ -1,5 +1,6 @@
 package com.organizethem.organizethem.ui.screens.createLink
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,7 +27,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.organizethem.organizethem.ui.components.TimeBox
 import com.organizethem.organizethem.ui.components.TimePickerWrapper
 
-// --- Design System Colors & Fonts ---
+
 val PrimaryColor = Color(0xFF334D4D)
 val SecondaryColor = Color(0xFFF5F5F5)
 val NeutralColor = Color(0xFF1E1E1E)
@@ -43,10 +44,25 @@ fun CreateLinkScreen(
     onClose: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+    
+    // Trigger Share Sheet when link is created
+    LaunchedEffect(viewModel.createdLinkId) {
+        viewModel.createdLinkId?.let { linkId ->
+            val shareIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, "Schedule a meeting with me: https://ecotrack-846b1.web.app/book/$linkId")
+                type = "text/plain"
+            }
+            context.startActivity(Intent.createChooser(shareIntent, "Share Booking Link"))
+            onLinkCreated(linkId)
+            viewModel.createdLinkId = null // Reset state
+        }
+    }
     
     // Time Picker UI States
     var showTimePicker by remember { mutableStateOf(false) }
-    var pickingFor by remember { mutableStateOf("") } // "start", "end", "meetup"
+    var pickingFor by remember { mutableStateOf("") } // "start", "end", "meetup", "meetup_end"
 
     Scaffold(
         containerColor = LightSurfaceColor,
@@ -193,20 +209,21 @@ fun CreateLinkScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // --- Conditional Content ---
-                if (viewModel.meetingType == "online") {
-                    // Duration Section
-                    SectionHeader(icon = Icons.Outlined.Schedule, title = "Duration")
-                    Spacer(modifier = Modifier.height(16.dp))
-                    DurationSegmentedControl(
-                        selected = viewModel.duration,
-                        onSelect = { viewModel.duration = it }
-                    )
+                if (viewModel.meetingType == "online" || viewModel.meetingType == "both") {
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Time Window Section
                     SectionHeader(icon = Icons.Outlined.Timer, title = "Availability Window")
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    val calculatedDuration = (viewModel.endHour * 60 + viewModel.endMinute) - (viewModel.startHour * 60 + viewModel.startMinute)
+                    Text(
+                        text = "Meeting Duration: ${if (calculatedDuration > 0) calculatedDuration else 0} minutes",
+                        style = MaterialTheme.typography.labelMedium.copy(color = PrimaryColor, fontWeight = FontWeight.Bold),
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         TimeBox(hour = viewModel.startHour, minute = viewModel.startMinute, onClick = { pickingFor = "start"; showTimePicker = true })
                         Text(" — ", modifier = Modifier.padding(horizontal = 8.dp), color = Color.Gray)
@@ -221,9 +238,21 @@ fun CreateLinkScreen(
                         placeholder = "e.g. 123 Business St, Studio A"
                     )
                     Spacer(modifier = Modifier.height(24.dp))
-                    SectionHeader(icon = Icons.Outlined.WatchLater, title = "Meetup Time")
-                    Spacer(modifier = Modifier.height(16.dp))
-                    TimeBox(hour = viewModel.meetupHour, minute = viewModel.meetupMinute, onClick = { pickingFor = "meetup"; showTimePicker = true })
+                    SectionHeader(icon = Icons.Outlined.WatchLater, title = "Meetup Window")
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    val calculatedDuration = (viewModel.meetupEndHour * 60 + viewModel.meetupEndMinute) - (viewModel.meetupHour * 60 + viewModel.meetupMinute)
+                    Text(
+                        text = "Meeting Duration: ${if (calculatedDuration > 0) calculatedDuration else 0} minutes",
+                        style = MaterialTheme.typography.labelMedium.copy(color = PrimaryColor, fontWeight = FontWeight.Bold),
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TimeBox(hour = viewModel.meetupHour, minute = viewModel.meetupMinute, onClick = { pickingFor = "meetup"; showTimePicker = true })
+                        Text(" — ", modifier = Modifier.padding(horizontal = 8.dp), color = Color.Gray)
+                        TimeBox(hour = viewModel.meetupEndHour, minute = viewModel.meetupEndMinute, onClick = { pickingFor = "meetup_end"; showTimePicker = true })
+                    }
                 }
             }
 
@@ -256,18 +285,21 @@ fun CreateLinkScreen(
             initialHour = when(pickingFor) {
                 "start" -> viewModel.startHour
                 "end" -> viewModel.endHour
-                else -> viewModel.meetupHour
+                "meetup" -> viewModel.meetupHour
+                else -> viewModel.meetupEndHour
             },
             initialMinute = when(pickingFor) {
                 "start" -> viewModel.startMinute
                 "end" -> viewModel.endMinute
-                else -> viewModel.meetupMinute
+                "meetup" -> viewModel.meetupMinute
+                else -> viewModel.meetupEndMinute
             },
             onTimeSelected = { h, m ->
                 when(pickingFor) {
                     "start" -> { viewModel.startHour = h; viewModel.startMinute = m }
                     "end" -> { viewModel.endHour = h; viewModel.endMinute = m }
                     "meetup" -> { viewModel.meetupHour = h; viewModel.meetupMinute = m }
+                    "meetup_end" -> { viewModel.meetupEndHour = h; viewModel.meetupEndMinute = m }
                 }
                 showTimePicker = false
             },
@@ -308,39 +340,6 @@ fun LocationTypeCard(
                 style = MaterialTheme.typography.labelLarge.copy(fontFamily = InterFont, fontWeight = FontWeight.Bold),
                 color = if (isSelected) Color.White else PrimaryColor
             )
-        }
-    }
-}
-
-@Composable
-fun DurationSegmentedControl(selected: Int, onSelect: (Int) -> Unit) {
-    Surface(
-        shape = RoundedCornerShape(28.dp),
-        color = SecondaryColor,
-        modifier = Modifier.fillMaxWidth().height(56.dp)
-    ) {
-        Row(modifier = Modifier.fillMaxSize().padding(4.dp)) {
-            listOf(15, 30, 60).forEach { mins ->
-                val isSelected = selected == mins
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(if (isSelected) PrimaryColor else Color.Transparent)
-                        .clickable { onSelect(mins) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "${mins}m",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontFamily = InterFont,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                        ),
-                        color = if (isSelected) Color.White else PrimaryColor
-                    )
-                }
-            }
         }
     }
 }

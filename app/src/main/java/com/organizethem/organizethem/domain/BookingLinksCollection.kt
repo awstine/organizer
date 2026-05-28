@@ -25,7 +25,11 @@ class BookingLinksCollection @Inject constructor(
                 description = doc.getString("description") ?: "",
                 active = doc.getBoolean("active") ?: true,
                 meetingType = doc.getString("meetingType") ?: "online",
-                location = doc.getString("location") ?: ""
+                location = doc.getString("location") ?: "",
+                customStartHour = doc.getLong("customStartHour")?.toInt(),
+                customStartMinute = doc.getLong("customStartMinute")?.toInt(),
+                customEndHour = doc.getLong("customEndHour")?.toInt(),
+                customEndMinute = doc.getLong("customEndMinute")?.toInt()
             )
         } else null
     }
@@ -45,7 +49,11 @@ class BookingLinksCollection @Inject constructor(
                     description = doc.getString("description") ?: "",
                     active = doc.getBoolean("active") ?: true,
                     meetingType = doc.getString("meetingType") ?: "online",
-                    location = doc.getString("location") ?: ""
+                    location = doc.getString("location") ?: "",
+                    customStartHour = doc.getLong("customStartHour")?.toInt(),
+                    customStartMinute = doc.getLong("customStartMinute")?.toInt(),
+                    customEndHour = doc.getLong("customEndHour")?.toInt(),
+                    customEndMinute = doc.getLong("customEndMinute")?.toInt()
                 )
             }
     }
